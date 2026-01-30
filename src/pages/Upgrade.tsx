@@ -5,7 +5,8 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
 import { Check, Diamond, Shield, Zap, HeadphonesIcon, Infinity, ArrowLeft } from "lucide-react";
 
-const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/test_00w28tfjo5BGf95ehQbEA00";
+const STRIPE_PAYMENT_LINK = "price_1SuSgkPKQqb6a2LlqZl0TWqD"; // UYARI: Burası normalde https://buy.stripe.com/... formatında bir link olmalı. Price ID doğrudan link olarak çalışmaz.
+
 
 const Upgrade = () => {
   const navigate = useNavigate();
