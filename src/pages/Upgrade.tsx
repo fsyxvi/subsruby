@@ -3,17 +3,54 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Navbar } from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
-import { Check, Diamond, Shield, Zap, HeadphonesIcon, Infinity, ArrowLeft } from "lucide-react";
+import { Check, Diamond, Shield, Zap, HeadphonesIcon, Infinity, ArrowLeft, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
-const STRIPE_PAYMENT_LINK = "price_1SuSgkPKQqb6a2LlqZl0TWqD"; // UYARI: Burası normalde https://buy.stripe.com/... formatında bir link olmalı. Price ID doğrudan link olarak çalışmaz.
-
+const STRIPE_PRICE_ID = "price_1SuSgkPKQqb6a2LlqZl0TWqD";
 
 const Upgrade = () => {
   const navigate = useNavigate();
   const { user, isUnlimited } = useAuth();
   const { t } = useLanguage();
+  const [loading, setLoading] = useState(false);
 
-  // Payment link is handled directly via anchor tag for maximum compatibility
+  const handleUpgrade = async () => {
+    try {
+      setLoading(true);
+      
+      const response = await fetch('/.netlify/functions/create-checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          priceId: STRIPE_PRICE_ID,
+          successUrl: `${window.location.origin}/control?success=true`,
+          cancelUrl: `${window.location.origin}/upgrade?canceled=true`,
+          customerEmail: user?.email,
+          clientReferenceId: user?.id
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Payment initialization failed');
+      }
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL received');
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      toast.error(t.common?.error || "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // If user already has lifetime access, show a different message
   if (isUnlimited) {
@@ -100,15 +137,14 @@ const Upgrade = () => {
 
               {/* CTA Button */}
               <div className="p-6 pt-0">
-                <a 
-                  href={`${STRIPE_PAYMENT_LINK}${user?.email ? `?prefilled_email=${encodeURIComponent(user.email)}` : ''}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full ruby-gradient border-0 shadow-ruby hover:shadow-ruby-strong text-lg py-6 gap-2 transition-all inline-flex items-center justify-center rounded-md font-medium text-white"
+                <Button 
+                  onClick={handleUpgrade}
+                  disabled={loading}
+                  className="w-full ruby-gradient border-0 shadow-ruby hover:shadow-ruby-strong text-lg py-6 gap-2 transition-all inline-flex items-center justify-center rounded-md font-medium text-white h-auto"
                 >
-                  <Shield className="w-5 h-5" />
+                  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Shield className="w-5 h-5" />}
                   {t.upgrade?.ctaButton || "Pay Securely with Stripe"}
-                </a>
+                </Button>
                 
                 {/* Trust Badges */}
                 <div className="flex items-center justify-center gap-4 mt-4 text-xs text-muted-foreground">
