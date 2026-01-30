@@ -1,0 +1,13 @@
+# Netlify configuration for Vite React App
+# Projeniz Vite kullandığı için Next.js ayarları yerine Vite/SPA uyumlu ayarlar eklendi.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# SPA (Single Page Application) yönlendirmesi
+# Tüm istekleri index.html'e yönlendirir, böylece 404 hatası almazsınız.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
